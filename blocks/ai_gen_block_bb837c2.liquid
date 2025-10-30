@@ -1,0 +1,506 @@
+{% doc %}
+  @prompt
+    Create a video hero section with overlay text that includes a customizable headline, subheadline, and call-to-action button. The section should support background video with text overlay positioned in the center, and the button should be prominently styled with customizable colors., I need the fonts and button style to match this existing theme., I need to be able to adjust the corner roundness of the video box, Can you add a pre headline section also?
+
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-video-hero-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    height: {{ block.settings.section_height }}vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: {{ block.settings.video_border_radius }}px;}
+
+  .ai-video-hero__video-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    border-radius: {{ block.settings.video_border_radius }}px;
+  }
+
+  .ai-video-hero__video-placeholder-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    border-radius: {{ block.settings.video_border_radius }}px;
+  }
+
+  .ai-video-hero__video-placeholder-{{ ai_gen_id }} svg {
+    width: 200px;
+    height: 200px;
+    opacity: 0.5;
+  }
+
+  .ai-video-hero__overlay-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, {{ block.settings.overlay_opacity | divided_by: 100.0 }});
+    z-index: 2;
+    border-radius: {{ block.settings.video_border_radius }}px;
+  }
+
+  .ai-video-hero__content-{{ ai_gen_id }} {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    color: {{ block.settings.text_color }};
+    max-width: {{ block.settings.content_width }}px;
+    padding: 0 20px;
+  }
+
+  .ai-video-hero__pre-headline-{{ ai_gen_id }} {
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-style: {{ settings.type_body_font.style }};
+    font-weight: {{ settings.type_body_font.weight }};
+    font-size: {{ block.settings.pre_headline_size }}px;
+    margin: 0 0 12px 0;
+    line-height: 1.3;
+    opacity: 0.8;
+    {% if block.settings.pre_headline_uppercase %}text-transform: uppercase;{% endif %}
+    letter-spacing: 0.05em;
+  }
+
+  .ai-video-hero__headline-{{ ai_gen_id }} {
+    font-family: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    font-style: {{ settings.type_heading_font.style }};
+    font-weight: {{ settings.type_heading_font.weight }};
+    font-size: {{ block.settings.headline_size }}px;
+    margin: 0 0 16px 0;
+    line-height: 1.2;
+    {% if settings.type_case_h1 == 'uppercase' %}text-transform: uppercase;{% endif %}
+    letter-spacing: {% if settings.type_letter_spacing_h1 == 'heading-tight' %}-0.02em{% elsif settings.type_letter_spacing_h1 == 'heading-loose' %}0.05em{% else %}0{% endif %};
+  }
+
+  .ai-video-hero__subheadline-{{ ai_gen_id }} {
+    font-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    font-style: {{ settings.type_body_font.style }};
+    font-weight: {{ settings.type_body_font.weight }};
+    font-size: {{ block.settings.subheadline_size }}px;
+    margin: 0 0 32px 0;
+    line-height: 1.4;
+    opacity: 0.9;
+  }
+
+  .ai-video-hero__button-{{ ai_gen_id }} {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: {{ block.settings.button_padding_vertical }}px {{ block.settings.button_padding_horizontal }}px;
+    background-color: {{ block.settings.button_background_color }};
+    color: {{ block.settings.button_text_color }};
+    text-decoration: none;
+    border: {{ settings.primary_button_border_width }}px solid {{ block.settings.button_border_color }};
+    border-radius: {{ settings.button_border_radius_primary }}px;
+    font-family: {% if settings.type_font_button_primary == 'accent' %}{{ settings.type_accent_font.family }}, {{ settings.type_accent_font.fallback_families }}{% else %}{{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }}{% endif %};
+    font-style: {% if settings.type_font_button_primary == 'accent' %}{{ settings.type_accent_font.style }}{% else %}{{ settings.type_body_font.style }}{% endif %};
+    font-weight: {% if settings.button_font_weight_primary != 'default' %}{{ settings.button_font_weight_primary }}{% elsif settings.type_font_button_primary == 'accent' %}{{ settings.type_accent_font.weight }}{% else %}{{ settings.type_body_font.weight }}{% endif %};
+    font-size: {{ block.settings.button_font_size }}px;
+    {% if settings.button_text_case_primary == 'uppercase' %}text-transform: uppercase;{% endif %}
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+  }
+
+  .ai-video-hero__button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_background_color }};
+    color: {{ block.settings.button_hover_text_color }};
+    border-color: {{ block.settings.button_hover_border_color }};
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
+
+  .ai-video-hero__button-{{ ai_gen_id }}:focus {
+    outline:2px solid {{ block.settings.button_background_color }};
+    outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 768px) {
+    .ai-video-hero-{{ ai_gen_id }} {
+      height: {{ block.settings.mobile_section_height }}vh;
+    }
+
+    .ai-video-hero__pre-headline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.pre_headline_size | times: 0.9 }}px;
+    }
+
+    .ai-video-hero__headline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.headline_size | times: 0.8 }}px;
+    }
+
+    .ai-video-hero__subheadline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.subheadline_size | times: 0.9 }}px;
+    }
+
+    .ai-video-hero__content-{{ ai_gen_id }} {
+      padding: 0 16px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .ai-video-hero__pre-headline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.pre_headline_size | times: 0.8 }}px;
+    }
+
+    .ai-video-hero__headline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.headline_size | times: 0.7 }}px;
+    }
+
+    .ai-video-hero__button-{{ ai_gen_id }} {
+      padding: {{ block.settings.button_padding_vertical | times: 0.8 }}px {{ block.settings.button_padding_horizontal | times: 0.8 }}px;
+      font-size: {{ block.settings.button_font_size | times: 0.9 }}px;
+    }
+  }
+{% endstyle %}
+
+<video-hero-{{ ai_gen_id }}
+  class="ai-video-hero-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  {% if block.settings.background_video %}
+    <video
+      class="ai-video-hero__video-{{ ai_gen_id }}"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      aria-hidden="true"
+    >
+      <source src="{{ block.settings.background_video }}" type="video/mp4">
+    </video>
+  {% else %}
+    <div class="ai-video-hero__video-placeholder-{{ ai_gen_id }}">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg></div>
+  {% endif %}
+
+  <div class="ai-video-hero__overlay-{{ ai_gen_id }}"></div>
+
+  <div class="ai-video-hero__content-{{ ai_gen_id }}">
+    {% if block.settings.pre_headline != blank %}
+      <div class="ai-video-hero__pre-headline-{{ ai_gen_id }}">
+        {{ block.settings.pre_headline }}
+      </div>
+    {% endif %}
+
+    {% if block.settings.headline != blank %}
+      <h1 class="ai-video-hero__headline-{{ ai_gen_id }}">
+        {{ block.settings.headline }}
+      </h1>
+    {% endif %}
+
+    {% if block.settings.subheadline != blank %}
+      <p class="ai-video-hero__subheadline-{{ ai_gen_id }}">
+        {{ block.settings.subheadline }}
+      </p>
+    {% endif %}
+
+    {% if block.settings.button_text != blank %}
+      <a
+        href="{{ block.settings.button_link }}"
+        class="ai-video-hero__button-{{ ai_gen_id }}"
+        {% if block.settings.button_link == blank %}
+          role="button"
+          tabindex="0"
+        {% endif %}
+      >
+        {{ block.settings.button_text }}
+      </a>
+    {% endif %}
+  </div>
+</video-hero-{{ ai_gen_id }}><script>
+(function() {
+  class VideoHero{{ ai_gen_id }} extends HTMLElement {
+    constructor() {
+      super();
+    }
+
+    connectedCallback() {
+      this.video = this.querySelector('.ai-video-hero__video-{{ ai_gen_id }}');
+      this.setupVideo();
+      this.handleIntersection();
+    }
+
+    setupVideo() {
+      if (!this.video) return;
+
+      this.video.addEventListener('loadeddata', () => {
+        this.video.play().catch(() => {
+          console.log('Video autoplay failed');
+        });
+      });
+
+      this.video.addEventListener('error', () => {
+        console.log('Video failed to load');
+      });
+    }
+
+    handleIntersection() {
+      if (!this.video) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this.video.play().catch(() => {
+              console.log('Video play failed');
+            });
+          } else {
+            this.video.pause();
+          }
+        });
+      }, { threshold: 0.5 });
+
+      observer.observe(this);
+    }
+  }
+
+  customElements.define('video-hero-{{ ai_gen_id }}', VideoHero{{ ai_gen_id }});
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Video Hero",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Video"
+    },
+    {
+      "type": "url",
+      "id": "background_video",
+      "label": "Background video URL",
+      "info": "Upload your video file to Files in Shopify admin, then copy the URL here"
+    },
+    {
+      "type": "range",
+      "id": "video_border_radius",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Video corner roundness",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Overlay opacity",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "pre_headline",
+      "label": "Pre-headline",
+      "default": "Introducing"
+    },
+    {
+      "type": "text",
+      "id": "headline",
+      "label": "Headline",
+      "default": "Your Amazing Video Hero"
+    },
+    {
+      "type": "textarea",
+      "id": "subheadline",
+      "label": "Subheadline",
+      "default": "Capture attention with stunning video backgrounds and compelling messaging that drives action."
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "section_height",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Section height",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "mobile_section_height",
+      "min": 40,
+      "max": 80,
+      "step": 5,
+      "unit": "vh",
+      "label": "Mobile section height",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "min": 400,
+      "max": 1000,
+      "step": 50,
+      "unit": "px",
+      "label": "Content width",
+      "default": 700
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "pre_headline_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Pre-headline size",
+      "default": 16
+    },
+    {
+      "type": "checkbox",
+      "id": "pre_headline_uppercase",
+      "label": "Pre-headline uppercase",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "headline_size",
+      "min": 24,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "Headline size",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "subheadline_size",
+      "min": 14,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Subheadline size",
+      "default": 18
+    },
+    {
+      "type": "header",
+      "content": "Button style"
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Background color",
+      "default": "#ffd700"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Border color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background_color",
+      "label": "Hover background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_text_color",
+      "label": "Hover text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_border_color",
+      "label": "Hover border color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "button_font_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_padding_vertical",
+      "min": 8,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "button_padding_horizontal",
+      "min": 16,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "label": "Horizontal padding",
+      "default": 32
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video Hero"
+    }
+  ]
+}
+{% endschema %}

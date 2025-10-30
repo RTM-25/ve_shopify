@@ -1,0 +1,267 @@
+{% doc %}
+  @prompt
+    Create CSS and JavaScript code to make existing announcement bar text scroll horizontally from right to left. The code should target the announcement bar text and add smooth continuous scrolling animation that can be customized for speed and pauses on hover.
+
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-scrolling-announcement-{{ ai_gen_id }} {
+    width: 100%;
+    overflow: hidden;
+    background-color: {{ block.settings.background_color }};
+    color: {{ block.settings.text_color }};
+    padding: {{ block.settings.padding }}px 0;
+    position: relative;
+  }
+
+  .ai-scrolling-announcement__content-{{ ai_gen_id }} {
+    display: flex;
+    white-space: nowrap;
+    animation: ai-scroll-{{ ai_gen_id }} {{ block.settings.scroll_speed }}s linear infinite;
+    will-change: transform;
+  }
+
+  .ai-scrolling-announcement__text-{{ ai_gen_id }} {
+    padding-right: {{ block.settings.text_spacing }}px;
+    font-size: {{ block.settings.font_size }}px;
+    font-weight: {{ block.settings.font_weight }};
+    {% if block.settings.text_transform == 'uppercase' %}
+      text-transform: uppercase;
+    {% endif %}
+  }
+
+  {% if block.settings.pause_on_hover %}
+    .ai-scrolling-announcement-{{ ai_gen_id }}:hover .ai-scrolling-announcement__content-{{ ai_gen_id }} {
+      animation-play-state: paused;
+    }
+  {% endif %}
+
+  @keyframes ai-scroll-{{ ai_gen_id }} {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-scrolling-announcement__text-{{ ai_gen_id }} {
+      font-size: {{ block.settings.font_size | times: 0.9 }}px;
+    }
+  }
+{% endstyle %}
+
+<scrolling-announcement-{{ ai_gen_id }}
+  class="ai-scrolling-announcement-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-scrolling-announcement__content-{{ ai_gen_id }}">
+    {% for i in (1..block.settings.repeat_count) %}
+      <span class="ai-scrolling-announcement__text-{{ ai_gen_id }}">
+        {{ block.settings.announcement_text }}
+      </span>
+    {% endfor %}
+  </div>
+</scrolling-announcement-{{ ai_gen_id }}><script>
+  (function() {
+    class ScrollingAnnouncement{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.content = null;
+        this.isScrolling = true;
+      }
+
+      connectedCallback() {
+        this.content = this.querySelector('.ai-scrolling-announcement__content-{{ ai_gen_id }}');
+        this.setupScrolling();
+        this.setupEventListeners();
+      }
+
+      setupScrolling() {
+        if (!this.content) return;
+
+        const textElement = this.content.querySelector('.ai-scrolling-announcement__text-{{ ai_gen_id }}');
+        if (!textElement) return;
+
+        const textWidth = textElement.offsetWidth;
+        const containerWidth = this.offsetWidth;
+        const totalWidth = textWidth * {{ block.settings.repeat_count }};
+
+        if (totalWidth <= containerWidth) {
+          const additionalCopies = Math.ceil(containerWidth / textWidth) + 2;
+          for (let i = 0; i < additionalCopies; i++) {
+            const clone = textElement.cloneNode(true);
+            this.content.appendChild(clone);
+          }
+        }
+      }
+
+      setupEventListeners() {
+        {% if block.settings.pause_on_hover %}
+          this.addEventListener('mouseenter', () => {
+            if (this.content) {
+              this.content.style.animationPlayState = 'paused';
+            }
+          });
+
+          this.addEventListener('mouseleave', () => {
+            if (this.content) {
+              this.content.style.animationPlayState = 'running';
+            }
+          });
+        {% endif %}
+
+        window.addEventListener('resize', () => {
+          this.setupScrolling();
+        });
+      }
+    }
+
+    customElements.define('scrolling-announcement-{{ ai_gen_id }}', ScrollingAnnouncement{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Scrolling announcement",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "Free shipping on orders over $50 • New arrivals every week • Subscribe for exclusive deals"
+    },
+    {
+      "type": "range",
+      "id": "repeat_count",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "label": "Text repetitions",
+      "default": 3
+    },
+    {
+      "type": "header",
+      "content": "Animation"
+    },
+    {
+      "type": "range",
+      "id": "scroll_speed",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "s",
+      "label": "Scroll duration",
+      "default": 30
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_hover",
+      "label": "Pause on hover",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Font size",
+      "default": 14
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "Font weight",
+      "options": [
+        {
+          "value": "300",
+          "label": "Light"
+        },
+        {
+          "value": "400",
+          "label": "Regular"
+        },
+        {
+          "value": "500",
+          "label": "Medium"
+        },
+        {
+          "value": "600",
+          "label": "Semibold"
+        },
+        {
+          "value": "700",
+          "label": "Bold"
+        }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "Text case",
+      "options": [
+        {
+          "value": "none",
+          "label": "Default"
+        },
+        {
+          "value": "uppercase",
+          "label": "Uppercase"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "padding",
+      "min": 5,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Vertical padding",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "text_spacing",
+      "min": 20,
+      "max": 200,
+      "step": 10,
+      "unit": "px",
+      "label": "Space between repetitions",
+      "default": 80
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scrolling announcement"
+    }
+  ],
+  "tag": null
+}
+{% endschema %}
